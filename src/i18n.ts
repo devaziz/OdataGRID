@@ -34,6 +34,7 @@ const resources = {
         "password": "Şifre",
         "serverUrl": "SAP Server URL (IP:Port)",
         "serviceUrl": "OData Servis URL",
+        "uploadFile": "Yerel Dosya Yükle",
         "note": "Not: Kullanıcı adı ve şifre boş bırakılırsa SAP server'ı direkt basic auth. yapılarak sonrasında sadece cookie ile çalışacaktır. Hiçbir şekilde kullanıcı adı ve şifre tutulmamaktadır."
       },
       "table": {
@@ -43,7 +44,8 @@ const resources = {
       },
       "errors": {
         "fetchFailed": "Veriler çekilemedi. Bağlantı veya yetkilendirme bilgilerinizi kontrol edin.",
-        "loginFailed": "Giriş başarısız. Bilgilerinizi kontrol edin."
+        "loginFailed": "Giriş başarısız. Bilgilerinizi kontrol edin.",
+        "invalidFile": "Geçersiz dosya formatı. Lütfen bir OData JSON dosyası seçin."
       },
       "info": {
         "loginSuccess": "SAP bağlantısı kuruldu."
@@ -81,6 +83,7 @@ const resources = {
         "password": "Password",
         "serverUrl": "SAP Server URL (IP:Port)",
         "serviceUrl": "OData Service URL",
+        "uploadFile": "Upload Local File",
         "note": "Note: If username and password are left empty, it will attempt direct basic auth and then work with cookies only. No credentials are stored locally."
       },
       "table": {
@@ -90,7 +93,8 @@ const resources = {
       },
       "errors": {
         "fetchFailed": "Could not fetch data. Check your connection or credentials.",
-        "loginFailed": "Login failed. Check your credentials."
+        "loginFailed": "Login failed. Check your credentials.",
+        "invalidFile": "Invalid file format. Please select an OData JSON file."
       },
       "info": {
         "loginSuccess": "Connected to SAP."
@@ -128,6 +132,7 @@ const resources = {
         "password": "Passwort",
         "serverUrl": "SAP-Server-URL (IP:Port)",
         "serviceUrl": "OData-Service-URL",
+        "uploadFile": "Lokale Datei hochladen",
         "note": "Hinweis: Wenn Benutzername und Passwort leer gelassen werden, wird eine direkte Basic-Auth versucht und anschließend nur mit Cookies gearbeitet. Es werden keine Zugangsdaten lokal gespeichert."
       },
       "table": {
@@ -137,7 +142,8 @@ const resources = {
       },
       "errors": {
         "fetchFailed": "Daten konnten nicht abgerufen werden. Verbindung oder Anmeldeinformationen prüfen.",
-        "loginFailed": "Anmeldung fehlgeschlagen. Anmeldeinformationen prüfen."
+        "loginFailed": "Anmeldung fehlgeschlagen. Anmeldeinformationen prüfen.",
+        "invalidFile": "Ungültiges Dateiformat. Bitte wählen Sie eine OData-JSON-Datei."
       },
       "info": {
         "loginSuccess": "Mit SAP verbunden."

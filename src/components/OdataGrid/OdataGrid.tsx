@@ -96,6 +96,64 @@ export const OdataGrid: React.FC<OdataGridProps> = ({ rowData: initialRowData, c
   const lastKeyRef = React.useRef<string>("");
   // Ref to hold current table filters as a Map (columnId -> filterValue)
   const filtersMapRef = React.useRef<Map<string, string>>(new Map());
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
+
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const content = e.target?.result as string;
+        const data = JSON.parse(content);
+        
+        let results = [];
+        if (data.d && data.d.results) results = data.d.results;
+        else if (data.value) results = data.value;
+        else if (Array.isArray(data)) results = data;
+        else results = data.d ? data.d : [data];
+
+        if (!Array.isArray(results)) results = [results];
+
+        // Normalize numeric strings
+        const normalized = results.map((row: any) => {
+          const newRow = { ...row };
+          Object.keys(newRow).forEach(key => {
+            if (typeof newRow[key] === 'string' && /^-?\d+(\.\d+)?$/.test(newRow[key])) {
+              const val = parseFloat(newRow[key]);
+              if (!isNaN(val)) newRow[key] = val;
+            }
+          });
+          return newRow;
+        });
+
+        setGridData(normalized);
+
+        // Generate columns if data exists
+        if (normalized.length > 0) {
+          const firstRow = normalized[0];
+          const cols = Object.keys(firstRow)
+            .filter(key => key !== '__metadata')
+            .map(key => ({
+              field: key,
+              headerName: key,
+              filter: true,
+              sortable: true,
+              minWidth: 150
+            }));
+          setGridColumns(cols);
+        }
+
+        setIsDialogOpen(false);
+        setTableKey(prev => prev + 1);
+      } catch (err) {
+        alert(t('errors.invalidFile'));
+      }
+    };
+    reader.readAsText(file);
+    if (event.target) event.target.value = '';
+  };
 
   // OData injection guards.
   // - Column identifiers: only ASCII identifiers (matches OData EDM field naming).
@@ -459,7 +517,24 @@ export const OdataGrid: React.FC<OdataGridProps> = ({ rowData: initialRowData, c
         open={isDialogOpen}
         headerText={t('dialog.urlTitle')}
         onAfterClose={handleDialogClose}
-        footer={<UI5Bar design="Footer" endContent={<><Button design="Emphasized" onClick={handleDialogSubmit}>{t('dialog.fetchData')}</Button><Button onClick={handleDialogClose}>{t('dialog.cancel')}</Button></>} />}
+        footer={
+          <UI5Bar 
+            design="Footer" 
+            endContent={
+              <>
+                <Button design="Transparent" onClick={() => fileInputRef.current?.click()}>
+                  {t('dialog.uploadFile')}
+                </Button>
+                <Button design="Emphasized" onClick={handleDialogSubmit}>
+                  {t('dialog.fetchData')}
+                </Button>
+                <Button onClick={handleDialogClose}>
+                  {t('dialog.cancel')}
+                </Button>
+              </>
+            } 
+          />
+        }
       >
         <FlexBox direction={FlexBoxDirection.Column} style={{ padding: '1rem', minWidth: '400px' }}>
           <Label for="sapUrlInput" showColon>{t('dialog.serviceUrl')}</Label>
@@ -510,6 +585,13 @@ export const OdataGrid: React.FC<OdataGridProps> = ({ rowData: initialRowData, c
           </p>
         </FlexBox>
       </Dialog>
+      <input
+        type="file"
+        ref={fileInputRef}
+        style={{ display: 'none' }}
+        onChange={handleFileUpload}
+        accept=".json"
+      />
     </div>
   );
 };

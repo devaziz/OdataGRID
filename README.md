@@ -14,6 +14,7 @@ SAP danışmanları ve geliştiricileri için OData servislerini hızlıca test 
 ## ✨ Temel Özellikler
 
 - 📊 **Dinamik Kolon Yapılandırması:** OData `$metadata` servisinden otomatik kolon isimleri, veri tipleri ve teknik detayları okur.
+- 📁 **Yerel Dosya Desteği (JSON):** Canlı bir OData servisi olmadan, önceden dışa aktarılmış JSON dosyalarını yükleyebilir, analiz edebilir ve üzerinde filtreleme yapabilirsiniz. Kolonlar otomatik olarak veriden türetilir.
 - 🔍 **Gelişmiş OData Filtreleme:**
   - Global arama ve kolon bazlı filtreleme.
   - OData V2 (`substringof`) ve V4 (`contains`) sözdizimi için otomatik dönüştürme.
