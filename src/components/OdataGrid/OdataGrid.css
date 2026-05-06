@@ -1,0 +1,118 @@
+:root {
+  --sap-primary: #0064d2;
+  --sap-bg: #eff4f9;
+  --sap-header-bg: #ffffff;
+  --sap-toolbar-bg: #ffffff;
+  --sap-border: #d9d9d9;
+  --sap-text: #32363a;
+  --sap-button-bg: #ffffff;
+  --sap-button-border: #0064d2;
+  --sap-shadow: 0 0 0 1px rgba(0,0,0,0.1), 0 2px 4px rgba(0,0,0,0.1);
+  --sap-row-hover: #eef7ff;
+}
+
+.odata-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+  background: white;
+  color: var(--sap-text);
+  font-family: '72', '72full', Arial, Helvetica, sans-serif;
+  overflow: hidden;
+}
+
+/* SAP Fiori Overflow Toolbar Style */
+.odata-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 0 16px;
+  height: 48px;
+  background: var(--sap-toolbar-bg);
+  border-bottom: 1px solid var(--sap-border);
+  gap: 8px;
+}
+
+.odata-search {
+  flex: 1;
+  max-width: 400px;
+  margin-right: auto;
+  position: relative;
+}
+
+.odata-search input {
+  width: 100%;
+  height: 32px;
+  padding: 0 32px 0 12px;
+  border: 1px solid #89919a;
+  border-radius: 4px;
+  font-size: 14px;
+  background: #ffffff;
+}
+
+.odata-search input:focus {
+  border-color: var(--sap-primary);
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(0, 100, 210, 0.2);
+}
+
+.odata-search svg {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #89919a;
+  pointer-events: none;
+}
+
+.odata-toolbar-actions {
+  display: flex;
+  gap: 4px;
+}
+
+/* SAP Fiori Button Style */
+.odata-button {
+  height: 32px;
+  padding: 0 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  background: var(--sap-button-bg);
+  border: 1px solid transparent;
+  color: var(--sap-primary);
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: normal;
+  cursor: pointer;
+}
+
+.odata-button:hover {
+  background: #f0f0f0;
+}
+
+.odata-button.primary {
+  background: var(--sap-primary);
+  color: white;
+}
+
+.odata-button.primary:hover {
+  background: #0056b3;
+}
+
+.odata-grid-wrapper {
+  flex: 1;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  background: white;
+  overflow: hidden;
+}
+
+.odata-chart-panel {
+  padding: 16px;
+  background: white;
+  border-top: 1px solid var(--sap-border);
+  height: 250px;
+}
