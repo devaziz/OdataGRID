@@ -44,7 +44,12 @@ export const loginSAP = async (config: SAPConfig) => {
     response = await fetch(proxyUrl, {
       method: 'GET',
       headers,
-      credentials: 'include'
+      credentials: 'include',
+      // Always hit the upstream so SAP can return a fresh 401 +
+      // WWW-Authenticate (which the browser needs to surface its native
+      // basic-auth dialog when credentials are empty). Cached 304s would
+      // strip those headers.
+      cache: 'no-store',
     });
   } catch (e: any) {
     throw new Error(`SAP sunucusuna ulaşılamadı: ${e.message}`);

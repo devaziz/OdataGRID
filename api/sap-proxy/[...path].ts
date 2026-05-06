@@ -172,6 +172,12 @@ export default async function handler(req: IncomingMessage, res: ServerResponse)
           return out;
         });
       }
+      // Never let SAP responses be cached by the browser or any intermediate
+      // CDN: a stale 200/304 would mask a fresh 401 + WWW-Authenticate, which
+      // the browser needs to surface its native basic-auth dialog.
+      upstreamRes.headers['cache-control'] = 'no-store, no-cache, must-revalidate, private';
+      delete upstreamRes.headers['etag'];
+      delete upstreamRes.headers['last-modified'];
       res.writeHead(upstreamRes.statusCode || 502, upstreamRes.headers);
       upstreamRes.pipe(res);
     }
