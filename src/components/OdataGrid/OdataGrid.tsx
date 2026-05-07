@@ -195,7 +195,11 @@ export const OdataGrid: React.FC<OdataGridProps> = ({ rowData: initialRowData, c
     return normalized;
   }, [odataVersion]);
 
-  const buildRequestUrl = useCallback((baseUrl: string, filterValue: string) => {
+  const buildRequestUrl = useCallback((
+    baseUrl: string,
+    filterValue: string,
+    pagingValues?: { topValue?: string; skipValue?: string }
+  ) => {
     const [basePath, existingQuery = ""] = baseUrl.split("?");
     const params = new URLSearchParams(existingQuery);
 
@@ -204,8 +208,10 @@ export const OdataGrid: React.FC<OdataGridProps> = ({ rowData: initialRowData, c
     params.delete('$skip');
 
     const normalizedFilter = normalizeFilterForVersion(filterValue);
-    const parsedTop = parseOptionalNonNegativeInt(topValue);
-    const parsedSkip = parseOptionalNonNegativeInt(skipValue);
+    const effectiveTop = pagingValues?.topValue ?? topValue;
+    const effectiveSkip = pagingValues?.skipValue ?? skipValue;
+    const parsedTop = parseOptionalNonNegativeInt(effectiveTop);
+    const parsedSkip = parseOptionalNonNegativeInt(effectiveSkip);
 
     if (normalizedFilter) params.set('$filter', normalizedFilter);
     if (parsedTop !== null) params.set('$top', String(parsedTop));
@@ -241,7 +247,11 @@ export const OdataGrid: React.FC<OdataGridProps> = ({ rowData: initialRowData, c
     }
   };
 
-  const applyODataFilter = useCallback(async (filterValue: string, force: boolean = false) => {
+  const applyODataFilter = useCallback(async (
+    filterValue: string,
+    force: boolean = false,
+    pagingValues?: { topValue?: string; skipValue?: string }
+  ) => {
     const isClearAction = filterValue === "" || filterValue === null;
 
     if (!force && !isClearAction && lastKeyRef.current !== "Enter") {
@@ -253,7 +263,7 @@ export const OdataGrid: React.FC<OdataGridProps> = ({ rowData: initialRowData, c
     setLoading(true);
 
     try {
-      const finalUrl = buildRequestUrl(sapUrl, filterValue);
+      const finalUrl = buildRequestUrl(sapUrl, filterValue, pagingValues);
 
       const data = await fetchSAPData(finalUrl, undefined, i18n.language);
       setGridData(data);
@@ -323,7 +333,8 @@ export const OdataGrid: React.FC<OdataGridProps> = ({ rowData: initialRowData, c
     setTopValue('');
     setSkipValue('');
     if (filtersMapRef.current) filtersMapRef.current.clear();
-    applyODataFilter('', true);
+    // State updates are async; pass explicit cleared paging to avoid stale $top/$skip in this request.
+    applyODataFilter('', true, { topValue: '', skipValue: '' });
     setTableKey(prev => prev + 1);
   }, [applyODataFilter]);
 
