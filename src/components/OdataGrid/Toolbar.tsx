@@ -4,6 +4,7 @@ import {
   Toolbar as UI5Toolbar,
   Button,
   Search,
+  Input,
   ToolbarSpacer,
   ToolbarSeparator,
   FlexBox,
@@ -13,7 +14,7 @@ import "@ui5/webcomponents-icons/dist/search";
 import "@ui5/webcomponents-icons/dist/excel-attachment";
 import "@ui5/webcomponents-icons/dist/line-chart";
 import "@ui5/webcomponents-icons/dist/sum";
-import "@ui5/webcomponents-icons/dist/filter";
+import "@ui5/webcomponents-icons/dist/refresh";
 import "@ui5/webcomponents-icons/dist/clear-filter";
 import "@ui5/webcomponents-icons/dist/download-from-cloud";
 import "@ui5/webcomponents-icons/dist/settings";
@@ -27,9 +28,14 @@ interface ToolbarProps {
   onClearFilters: () => void;
   onFetchSAP: () => void;
   onShowSettings: () => void;
+  onTopChange: (value: string) => void;
+  onSkipChange: (value: string) => void;
+  onApplyPaging: () => void;
   showCharts: boolean;
   showTotals: boolean;
   searchValue: string;
+  topValue: string;
+  skipValue: string;
 }
 
 export const Toolbar: React.FC<ToolbarProps> = ({
@@ -41,12 +47,35 @@ export const Toolbar: React.FC<ToolbarProps> = ({
   onClearFilters,
   onFetchSAP,
   onShowSettings,
+  onTopChange,
+  onSkipChange,
+  onApplyPaging,
   showCharts,
   showTotals,
-  searchValue
+  searchValue,
+  topValue,
+  skipValue
 }) => {
   const { t, i18n } = useTranslation();
   if (import.meta.env.DEV) console.log("Current language:", i18n.language);
+  const topHasError = topValue.trim() !== "" && !/^\d+$/.test(topValue.trim());
+  const skipHasError = skipValue.trim() !== "" && !/^\d+$/.test(skipValue.trim());
+
+  const handleTopInput = (e: any) => {
+    const next = String(e.target.value ?? "");
+    if (/^\d*$/.test(next)) onTopChange(next);
+  };
+
+  const handleSkipInput = (e: any) => {
+    const next = String(e.target.value ?? "");
+    if (/^\d*$/.test(next)) onSkipChange(next);
+  };
+
+  const handlePagingKeyDown = (e: any) => {
+    if (e.key === 'Enter' && !topHasError && !skipHasError) {
+      onApplyPaging();
+    }
+  };
 
   return (
     <UI5Toolbar style={{ borderRadius: '4px 4px 0 0', flexWrap: 'wrap', height: 'auto', padding: '5px' }}>
@@ -106,6 +135,36 @@ export const Toolbar: React.FC<ToolbarProps> = ({
         </div>
 
         <ToolbarSeparator className="mobile-hide" />
+
+        <Input
+          value={topValue}
+          onInput={handleTopInput}
+          onKeyDown={handlePagingKeyDown}
+          placeholder={t('toolbar.topPlaceholder')}
+          type="Number"
+          valueState={topHasError ? "Error" : "None"}
+          style={{ width: '110px' }}
+          tooltip={t('toolbar.topTooltip')}
+        />
+        <Input
+          value={skipValue}
+          onInput={handleSkipInput}
+          onKeyDown={handlePagingKeyDown}
+          placeholder={t('toolbar.skipPlaceholder')}
+          type="Number"
+          valueState={skipHasError ? "Error" : "None"}
+          style={{ width: '110px' }}
+          tooltip={t('toolbar.skipTooltip')}
+        />
+        <Button
+          icon="refresh"
+          design="Transparent"
+          onClick={onApplyPaging}
+          disabled={topHasError || skipHasError}
+          tooltip={t('toolbar.applyPagingTooltip')}
+        />
+
+        <ToolbarSeparator />
 
         <Button 
           icon="sum" 

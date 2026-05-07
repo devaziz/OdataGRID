@@ -51,6 +51,8 @@ export const OdataGrid: React.FC<OdataGridProps> = ({ rowData: initialRowData, c
   const [showCharts, setShowCharts] = useState(false);
   const [showTotals, setShowTotals] = useState(true);
   const [searchFilter, setSearchFilter] = useState('');
+  const [topValue, setTopValue] = useState('');
+  const [skipValue, setSkipValue] = useState('');
   const [groupBy] = useState<string[]>([]);
   const [tableKey, setTableKey] = useState(0);
 
@@ -161,6 +163,57 @@ export const OdataGrid: React.FC<OdataGridProps> = ({ rowData: initialRowData, c
   // - String literals: OData escape rule is to double the single quote.
   const isValidColId = (colId: string): boolean => /^[A-Za-z_][A-Za-z0-9_]*$/.test(colId);
   const escapeODataString = (s: string): string => String(s).replace(/'/g, "''");
+  const parseOptionalNonNegativeInt = (value: string): number | null => {
+    const trimmed = value.trim();
+    if (!trimmed) return null;
+    if (!/^\d+$/.test(trimmed)) return null;
+    return Number.parseInt(trimmed, 10);
+  };
+
+  const normalizeFilterForVersion = useCallback((rawFilter: string) => {
+    const isV4 = odataVersion === "4.0";
+    let normalized = rawFilter.trim();
+    if (!normalized) return "";
+
+    // SAP V2 substringof normalization (whitespace-strict gateway).
+    if (!isV4 && normalized.includes('substringof')) {
+      normalized = normalized.replace(/substringof\('(.*)',\s+(.*)\)/g, "substringof('$1',$2)");
+      if (!normalized.includes(' eq true')) {
+        normalized = `${normalized} eq true`;
+      }
+    }
+
+    // V2 -> V4 conversion (existing behavior). Note: input was already
+    // produced via escapeODataString upstream, so we do not re-escape here.
+    if (isV4 && normalized.includes('substringof')) {
+      const match = normalized.match(/substringof\('(.*)',\s*(.*)\)/);
+      if (match) {
+        normalized = `contains(${match[2]}, '${match[1]}')`;
+      }
+    }
+
+    return normalized;
+  }, [odataVersion]);
+
+  const buildRequestUrl = useCallback((baseUrl: string, filterValue: string) => {
+    const [basePath, existingQuery = ""] = baseUrl.split("?");
+    const params = new URLSearchParams(existingQuery);
+
+    params.delete('$filter');
+    params.delete('$top');
+    params.delete('$skip');
+
+    const normalizedFilter = normalizeFilterForVersion(filterValue);
+    const parsedTop = parseOptionalNonNegativeInt(topValue);
+    const parsedSkip = parseOptionalNonNegativeInt(skipValue);
+
+    if (normalizedFilter) params.set('$filter', normalizedFilter);
+    if (parsedTop !== null) params.set('$top', String(parsedTop));
+    if (parsedSkip !== null) params.set('$skip', String(parsedSkip));
+
+    const query = params.toString();
+    return query ? `${basePath}?${query}` : basePath;
+  }, [normalizeFilterForVersion, topValue, skipValue]);
 
   const handleTableKeyDown = (e: React.KeyboardEvent) => {
     lastKeyRef.current = e.key;
@@ -200,35 +253,7 @@ export const OdataGrid: React.FC<OdataGridProps> = ({ rowData: initialRowData, c
     setLoading(true);
 
     try {
-      let finalUrl = sapUrl;
-      if (filterValue) {
-        const isV4 = odataVersion === "4.0";
-        let odataFilter = filterValue.trim();
-
-        // SAP V2 substringof normalization (whitespace-strict gateway).
-        if (!isV4 && odataFilter.includes('substringof')) {
-          odataFilter = odataFilter.replace(/substringof\('(.*)',\s+(.*)\)/g, "substringof('$1',$2)");
-          if (!odataFilter.includes(' eq true')) {
-            odataFilter = `${odataFilter} eq true`;
-          }
-        }
-
-        // V2 -> V4 conversion (existing behavior). Note: input was already
-        // produced via escapeODataString upstream, so we do not re-escape here.
-        if (isV4 && odataFilter.includes('substringof')) {
-          const match = odataFilter.match(/substringof\('(.*)',\s*(.*)\)/);
-          if (match) {
-            odataFilter = `contains(${match[2]}, '${match[1]}')`;
-          }
-        }
-
-        const separator = finalUrl.includes('?') ? '&' : '?';
-        if (finalUrl.includes('/sap/opu/')) {
-          finalUrl = `${finalUrl}${separator}a=b$filter=${encodeURIComponent(odataFilter)}`;
-        } else {
-          finalUrl = `${finalUrl}${separator}$filter=${encodeURIComponent(odataFilter)}`;
-        }
-      }
+      const finalUrl = buildRequestUrl(sapUrl, filterValue);
 
       const data = await fetchSAPData(finalUrl, undefined, i18n.language);
       setGridData(data);
@@ -238,14 +263,15 @@ export const OdataGrid: React.FC<OdataGridProps> = ({ rowData: initialRowData, c
       setLoading(false);
       lastKeyRef.current = "";
     }
-  }, [sapUrl, odataVersion, i18n.language]);
+  }, [buildRequestUrl, sapUrl, i18n.language]);
 
   const handleDialogSubmit = async () => {
     setIsDialogOpen(false);
     setGridData([]);
     setLoading(true);
     try {
-      const data = await fetchSAPData(sapUrl, sapConfig, i18n.language);
+      const finalUrl = buildRequestUrl(sapUrl, searchFilter);
+      const data = await fetchSAPData(finalUrl, sapConfig, i18n.language);
       setGridData(data);
       const meta = await fetchSAPMetadata(sapUrl, sapConfig);
       if (meta && meta.columns && meta.columns.length > 0) {
@@ -294,10 +320,30 @@ export const OdataGrid: React.FC<OdataGridProps> = ({ rowData: initialRowData, c
 
   const onClearFilters = useCallback(() => {
     setSearchFilter('');
+    setTopValue('');
+    setSkipValue('');
     if (filtersMapRef.current) filtersMapRef.current.clear();
     applyODataFilter('', true);
     setTableKey(prev => prev + 1);
   }, [applyODataFilter]);
+
+  const onApplyPaging = useCallback(() => {
+    const filterParts: string[] = [];
+    const isV4 = odataVersion === "4.0";
+
+    filtersMapRef.current.forEach((val, colId) => {
+      if (!val) return;
+      if (!isValidColId(colId)) return;
+      const safeVal = escapeODataString(val);
+      const part = isV4
+        ? `contains(${colId}, '${safeVal}')`
+        : `substringof('${safeVal}',${colId}) eq true`;
+      filterParts.push(part);
+    });
+
+    const effectiveFilter = filterParts.length > 0 ? filterParts.join(' and ') : searchFilter;
+    applyODataFilter(effectiveFilter, true);
+  }, [applyODataFilter, odataVersion, searchFilter]);
 
   const onFetchSAP = () => {
     setIsDialogOpen(true);
@@ -449,9 +495,14 @@ export const OdataGrid: React.FC<OdataGridProps> = ({ rowData: initialRowData, c
         }}
         onFetchSAP={onFetchSAP}
         onShowSettings={() => setIsSettingsOpen(true)}
+        onTopChange={setTopValue}
+        onSkipChange={setSkipValue}
+        onApplyPaging={onApplyPaging}
         showCharts={showCharts}
         showTotals={showTotals}
         searchValue={searchFilter}
+        topValue={topValue}
+        skipValue={skipValue}
       />
 
       <div

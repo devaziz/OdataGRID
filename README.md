@@ -20,6 +20,7 @@ SAP danışmanları ve geliştiricileri için OData servislerini hızlıca test 
   - OData V2 (`substringof`) ve V4 (`contains`) sözdizimi için otomatik dönüştürme.
   - "Enter" ile tetiklenen akıllı sunucu tarafı filtreleme.
   - Filter girdileri için OData escape + kolon ID allowlist (injection koruması).
+- 📄 **Opsiyonel Sayfalama Parametreleri:** Toolbar üzerinden `$top` ve `$skip` değerleri girilerek istek URL'ine eklenebilir. Alanlar boş bırakılırsa parametre gönderilmez.
 - 📈 **Veri Analizi ve Grafikler:** Gruplanan verileri anlık olarak Bar Chart formatında raporlama.
 - 📂 **Excel Entegrasyonu:** Tek tıkla Excel'e aktarma; CSV/Excel formula injection koruması (`=`, `+`, `-`, `@`, `\t`, `\r` ile başlayan hücreler güvenli prefix'lenir).
 - 🌐 **Çoklu Dil Desteği:** Türkçe, İngilizce, Almanca (i18next).
@@ -108,6 +109,13 @@ Uygulama iki farklı çalışma modunda farklı bir SAP proxy katmanı kullanır
 İlk paint'te yüklenen demo URL'sini değiştirmek için `src/components/OdataGrid/OdataGrid.tsx` içindeki `DEMO_ODATA_URL` sabitini güncelle.
 
 > **Not:** Public bir endpoint kullanırsan, `vercel.json` CSP'sindeki `connect-src`'a o host'u eklemeyi unutma; aksi halde Vercel prod'da bağlantı bloklanır.
+
+### OData `$top` / `$skip` Kullanımı
+- Toolbar'daki `Top ($top)` ve `Skip ($skip)` alanları **opsiyoneldir**.
+- Geçerli bir tam sayı girildiğinde ilgili OData parametresi istek URL'ine eklenir.
+- Alan boşsa veya temizlenirse o parametre gönderilmez.
+- `Uygula` butonu mevcut filtre ile birlikte `$top/$skip` değerlerini yeniden uygular.
+- Mevcut query parametreleri (`$format`, `sap-client`, vb.) korunur; sadece `$filter`, `$top`, `$skip` parametreleri yeniden yazılır.
 
 ## 🛠️ Kullanılan Teknolojiler
 
