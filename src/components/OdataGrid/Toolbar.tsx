@@ -142,9 +142,9 @@ export const Toolbar: React.FC<ToolbarProps> = ({
           onKeyDown={handlePagingKeyDown}
           placeholder={t('toolbar.topPlaceholder')}
           type="Number"
-          valueState={topHasError ? "Error" : "None"}
+          valueState={topHasError ? "Negative" : "None"}
           style={{ width: '110px' }}
-          tooltip={t('toolbar.topTooltip')}
+          title={t('toolbar.topTooltip')}
         />
         <Input
           value={skipValue}
@@ -152,9 +152,9 @@ export const Toolbar: React.FC<ToolbarProps> = ({
           onKeyDown={handlePagingKeyDown}
           placeholder={t('toolbar.skipPlaceholder')}
           type="Number"
-          valueState={skipHasError ? "Error" : "None"}
+          valueState={skipHasError ? "Negative" : "None"}
           style={{ width: '110px' }}
-          tooltip={t('toolbar.skipTooltip')}
+          title={t('toolbar.skipTooltip')}
         />
         <Button
           icon="refresh"
